@@ -66,7 +66,7 @@ Done.
 Paste into your terminal:
 
 ```bash
-brew install --HEAD exoticpengy/supaswap/supaswap
+brew install exoticpengy/supaswap/supaswap
 ```
 
 **Requirements:** macOS, [Homebrew](https://brew.sh), and the [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) (`brew install supabase/tap/supabase`).
@@ -85,7 +85,7 @@ ln -s "$PWD/homebrew-supaswap/supaswap" /opt/homebrew/bin/supaswap   # or any di
 <summary><strong>Update / uninstall</strong></summary>
 
 ```bash
-brew upgrade --fetch-HEAD supaswap   # update
+brew upgrade supaswap                 # update
 brew uninstall supaswap               # uninstall
 ```
 
