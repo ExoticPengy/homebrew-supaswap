@@ -180,6 +180,14 @@ Not supported yet. supaswap works with the default profile only.
 
 Runs the full test suite against throwaway Keychain entries. Your real logins are never touched.
 
+To release, push to `main`, then:
+
+```bash
+gh release create vX.Y.Z --generate-notes
+```
+
+A GitHub Action updates the formula's `url` and `sha256` automatically.
+
 ## License
 
 [MIT](LICENSE)
