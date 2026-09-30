@@ -123,6 +123,7 @@ supaswap use work
 | `supaswap use <name>` | Log the CLI in as a saved account. |
 | `supaswap ls` | List saved accounts. `*` marks the active one. |
 | `supaswap rm <name>` | Delete a saved account. |
+| `supaswap rename <old> <new>` | Rename a saved account. Refuses if `<new>` already exists. |
 | `supaswap help` | Show all commands (also `-h`, `--help`). |
 
 Names may use letters, digits, `.`, `_` and `-`.
@@ -137,6 +138,7 @@ $ supaswap ls
 
 - **`save`** reads the Supabase CLI's token from the macOS Keychain and stores a copy under Keychain service `supaswap`, account `<name>`.
 - **`use`** pipes the saved token into `supabase login` on stdin, so the CLI stores it the same way it always does.
+- The active account name (never a token) is kept in `~/.config/supaswap/current`. If you run `supabase login` yourself, the `*` in `ls` is stale until your next `save` or `use`.
 - Tokens never appear as command-line arguments, so they can't be seen in `ps` or your shell history.
 - One bash script. No dependencies beyond what ships with macOS, plus the Supabase CLI.
 
@@ -145,7 +147,7 @@ $ supaswap ls
 <details>
 <summary><strong>macOS asks "security wants to use your confidential information stored in Supabase CLI"</strong></summary>
 
-Expected. supaswap reads the CLI's Keychain entry. Click **Always Allow**. The prompt comes back after each fresh `supabase login`, because the CLI recreates its entry.
+Expected, only during `supaswap save`: it reads the CLI's Keychain entry, which loses its Always Allow whenever `supabase login` writes a different account to it. Click **Always Allow**. `use`, `ls` and `rm` never prompt.
 
 </details>
 

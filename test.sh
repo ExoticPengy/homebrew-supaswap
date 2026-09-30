@@ -12,10 +12,10 @@ read -r tok
 printf 'add-generic-password -U -s supaswap-test-cli -a cli -w "%s"\n' "$tok" | security -i >/dev/null
 STUB
 chmod +x "$tmp/login"
-export SUPASWAP_LOGIN="$tmp/login"
+export SUPASWAP_LOGIN="$tmp/login" SUPASWAP_CURRENT="$tmp/current"
 
 wipe() {
-  for a in a b; do security delete-generic-password -s supaswap-test -a "$a" >/dev/null 2>&1; done
+  for a in a b c; do security delete-generic-password -s supaswap-test -a "$a" >/dev/null 2>&1; done
   security delete-generic-password -s supaswap-test-cli -a cli >/dev/null 2>&1
 }
 trap 'wipe; rm -rf "$tmp"' EXIT
@@ -52,6 +52,7 @@ check "save overwrites" "$(cli_token)" sbp_ccc
 out=$(./supaswap rm a 2>&1); check "rm twice exits 1" "$?" 1
 check "rm twice msg" "$out" "no saved account: a"
 check "ls after rm" "$(./supaswap ls)" "* b"
+check "ls never reads CLI keychain" "$(SUPASWAP_CLI_SERVICE=unreadable ./supaswap ls)" "* b"
 
 printf 'add-generic-password -U -s supaswap-test-cli -a cli -w "go-keyring-base64:%s"\n' "$(printf sbp_ddd | base64)" | security -i >/dev/null
 ./supaswap save a >/dev/null; login_as sbp_eee; ./supaswap use a >/dev/null
@@ -59,11 +60,23 @@ check "save decodes go-keyring-base64" "$(cli_token)" sbp_ddd
 
 login_as junk; ./supaswap save a >/dev/null 2>&1; check "save rejects non-sbp token" "$?" 1
 
+./supaswap rm a >/dev/null; check "rm active clears marker" "$(./supaswap ls)" "  b"
+
+./supaswap use b >/dev/null; ./supaswap rename b c >/dev/null
+check "rename moves active marker" "$(./supaswap ls)" "* c"
+login_as sbp_zzz; ./supaswap use c >/dev/null; check "renamed account still works" "$(cli_token)" sbp_ccc
+login_as sbp_aaa; ./supaswap save a >/dev/null
+out=$(./supaswap rename a c 2>&1); check "rename onto existing exits 1" "$?" 1
+check "rename onto existing msg" "$out" "account already exists: c"
+check "rename onto existing keeps both" "$(./supaswap ls)" "$(printf '* a\n  c')"
+out=$(./supaswap rename nope x 2>&1); check "rename unknown msg" "$out" "no saved account: nope"
+./supaswap rename a 'x y' >/dev/null 2>&1; check "rename bad new name exits 1" "$?" 1
+
 ./supaswap save 'a b' >/dev/null 2>&1; check "bad name exits 1" "$?" 1
 ./supaswap >/dev/null 2>&1; check "no command exits 1" "$?" 1
 for h in help -h --help; do
   out=$(./supaswap $h 2>/dev/null); check "$h exits 0" "$?" 0
-  case "$out" in *"save <name>"*"use <name>"*"ls"*"rm <name>"*) r=listed ;; *) r=missing ;; esac
+  case "$out" in *"save <name>"*"use <name>"*"ls"*"rm <name>"*"rename <old> <new>"*) r=listed ;; *) r=missing ;; esac
   check "$h lists commands" "$r" listed
 done
 
